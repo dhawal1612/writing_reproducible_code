@@ -1,8 +1,17 @@
 # The recipe. Regenerate with:  pip freeze > requirements.txt
 #
-# Pinned exactly, because "pandas" and "pandas==2.1.4" are different promises.
+# Pinned exactly, because "pandas" and "pandas==3.0.5" are different promises.
 # A labmate runs  pip install -r requirements.txt  and gets what you had.
-pandas==2.1.4
-numpy==1.26.2
-matplotlib==3.8.2
-jupyterlab==4.0.9
+#
+# These four versions were chosen because they ship prebuilt wheels for CPython
+# 3.11 through 3.14, so nobody in the room has to compile anything. If pip starts
+# compiling C code instead of downloading a .whl, your Python is outside that
+# range — see "If the install fails" in README.md.
+#
+# Only the four packages we actually import are listed. A real `pip freeze` emits
+# every transitive dependency too (~90 lines here); that is stricter and uglier,
+# and both are defensible. What matters is that the file exists and is committed.
+pandas==3.0.5
+numpy==2.4.6
+matplotlib==3.11.1
+jupyterlab==4.6.2

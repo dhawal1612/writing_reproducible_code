@@ -44,8 +44,14 @@ secrets.yaml
 *.dta
 *.sav
 
-# --- Notebook noise --------------------------------------------------------
+# --- Notebook / knit output ------------------------------------------------
+# Rendered output is a build artifact: regenerate it, don't commit it. Knitting
+# 01_explore.Rmd writes 01_explore.html (and sometimes an _files/ folder) right
+# next to the source, and it WILL show up in git status if you don't ignore it.
 .ipynb_checkpoints/
+*.html
+*_files/
+*.nb.html
 
 # --- OS / editor -----------------------------------------------------------
 .DS_Store

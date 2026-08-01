@@ -20,9 +20,9 @@ Work and Reproduce Your Figure?*
 
 ```bash
 git clone <this-repo-url>
-cd demo-repo
+cd writing_reproducible_code
 
-python -m venv .venv
+python3 -m venv .venv
 source .venv/bin/activate          # Windows: .venv\Scripts\activate
 pip install -r requirements.txt
 
@@ -31,6 +31,39 @@ jupyter lab                        # then open notebooks/01_explore.ipynb
 
 Your shell prompt should change when the venv activates — that's the visual cue that
 you're installing into the sandbox rather than into your system Python.
+
+**Tested on CPython 3.11–3.14.** Check yours with `python3 -V`.
+
+### If the install fails
+
+If you see pip printing `Compiling Cython source ...` or `Building wheel for pandas`
+followed by a wall of C compiler errors, pip could not find a prebuilt wheel for your
+Python and tried to build the package from source instead.
+
+That is almost always a **version mismatch, not a broken laptop**: the pinned version
+predates your Python, so no wheel exists for it. The giveaway is an error like
+`too few arguments to function call, expected 6, have 5` — that is C code written against
+an older CPython.
+
+Two ways out:
+
+```bash
+# 1. Confirm the diagnosis: refuse to compile, and pip will say so plainly.
+pip install --only-binary=:all: -r requirements.txt
+
+# 2. Then either use a Python in the tested range, or regenerate the recipe
+#    for your own Python and commit the result:
+pip install pandas numpy matplotlib jupyterlab
+pip freeze > requirements.txt
+```
+
+Keep `--only-binary=:all:` in your back pocket generally. It turns a ten-minute
+compile-and-fail into a one-line "no wheel for this" answer.
+
+> This is the "it works on my machine" problem in its purest form, and it cuts both ways:
+> a pin that is too loose gives your labmate different results, and a pin that is too tight
+> stops them installing at all. Neither is solved by not pinning — it is solved by pinning
+> *and* saying which Pythons you tested.
 
 ## Setup — R
 
@@ -91,6 +124,22 @@ output.
 check built in and most people never notice.
 
 Then fix it, and re-run from clean. That's the habit.
+
+### Putting the trap back
+
+Once you've fixed it, the broken version is gone from your working copy — and **JupyterLab
+autosaves**, so you don't have to press Ctrl+S to lose it. To reset:
+
+```bash
+./reset-demo.sh
+```
+
+That restores only `notebooks/01_explore.ipynb` and `analysis/01_explore.Rmd` from your last
+commit, clears render leftovers, and then *verifies* the trap is actually back rather than
+assuming. Run it before each rehearsal, and again before you push.
+
+Use the script rather than `git restore .` — the blunt version would also throw away edits
+to `requirements.txt` or `README.md` that you meant to keep.
 
 ### 2. Meet the debugger
 
