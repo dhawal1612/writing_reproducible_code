@@ -1,0 +1,83 @@
+---
+title: "Lab results — first look"
+output: html_document
+---
+
+Synthetic data. See `data/README.md`.
+
+> **This document has the same deliberate flaw as `notebooks/01_explore.ipynb`.**
+> Run the chunks one at a time from top to bottom and it looks fine — because you will
+> have defined things along the way in your global environment. Then try
+> **Knit**, and watch it fail.
+>
+> That is the R version of Restart & Run All, and you get it for free: knitting always
+> starts a fresh R session, so it cannot see anything hiding in your environment.
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+# knitr sets the working directory to the project root for .Rmd files in a
+# subfolder only if you tell it to. This is the reproducible way to say it.
+knitr::opts_knit$set(root.dir = rprojroot::find_rstudio_root_file())
+```
+
+```{r load}
+source("R/cleaning.R")
+
+raw <- load_labs("data/labs.csv")
+cat(nrow(raw), "rows loaded\n")
+```
+
+## Clean it
+
+One `source()`, not five pasted chunks. That is the whole argument for `R/cleaning.R` —
+change a cleaning rule and it changes everywhere at once.
+
+```{r clean}
+labs <- qc_flags(tidy_labs(raw))
+
+cat(nrow(labs), "rows after cleaning (1 exact duplicate dropped)\n")
+cat("sites:", paste(sort(unique(labs$site)), collapse = ", "), "\n")
+```
+
+## Flag the high-glucose visits
+
+```{r flag}
+# `threshold` is not defined anywhere in this document.
+#
+# If you have been working in this session for a while, it is probably sitting in
+# your global environment from something you ran earlier — so this chunk will run
+# happily for YOU and fail for everyone else, including future you on a clean start.
+#
+# Worse, in RStudio's default configuration that value can survive quitting the
+# program entirely, because the workspace gets saved to .RData and restored at
+# startup. Turn that off: Tools > Global Options > General.
+flagged <- flag_high_glucose(labs, threshold)
+
+cat(nrow(flagged), "visits at or above the threshold\n")
+flagged[, c("subject_id", "glucose_mmol_l", "hba1c_percent", "site")]
+```
+
+## Mean values by site
+
+```{r summary}
+summarise_by_site(labs)
+```
+
+---
+
+## Your turn
+
+1. **Knit this document.** It fails at the `flag` chunk — the one that ran fine interactively.
+2. Read the error: `object 'threshold' not found`.
+3. Ask the uncomfortable question: *that output was real. Someone could have put it in a paper.*
+4. Fix it — define `threshold <- 7.0` in the chunk where it belongs, so the intent is
+   written down rather than remembered.
+5. Knit again. Now it is reproducible.
+
+Two more things worth trying, in this order:
+
+- Run `rm(list = ls())` and knit again. It still works, which proves `rm(list = ls())`
+  was never the safety check you thought it was — it clears variables but leaves
+  packages and options loaded.
+- **Session → Restart R** (`Cmd/Ctrl+Shift+F10`), then source the whole thing. That is
+  the real clean start.

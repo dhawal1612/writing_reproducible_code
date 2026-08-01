@@ -1,0 +1,8 @@
+# The recipe. Regenerate with:  pip freeze > requirements.txt
+#
+# Pinned exactly, because "pandas" and "pandas==2.1.4" are different promises.
+# A labmate runs  pip install -r requirements.txt  and gets what you had.
+pandas==2.1.4
+numpy==1.26.2
+matplotlib==3.8.2
+jupyterlab==4.0.9

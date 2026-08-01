@@ -1,0 +1,53 @@
+# ---------------------------------------------------------------------------
+# This is the .gitignore from segment 4 of the session, as a real working file.
+# The comments are for the students, not for you.
+# ---------------------------------------------------------------------------
+
+# --- Environments: commit the RECIPE, never the SANDBOX --------------------
+.venv/
+venv/
+renv/library/
+renv/staging/
+renv/python/
+__pycache__/
+*.pyc
+.Rproj.user/
+
+# --- Files that can contain patient data without looking like it -----------
+# .RData is a binary blob of whatever was in your R session. If patient data was
+# loaded, it is in there, and no code reviewer will ever open it to find out.
+.RData
+.Rhistory
+.Rapp.history
+# Python's equivalents: pickled and cached dataframes.
+*.pkl
+*.pickle
+*.parquet
+*.feather
+
+# --- Secrets ---------------------------------------------------------------
+.env
+.Renviron
+*.pem
+*.key
+*.p12
+credentials.json
+secrets.yaml
+
+# --- Data ------------------------------------------------------------------
+# In real work, data lives OUTSIDE the repo and the repo stores a path to it.
+# data/labs.csv is committed here as an exception because it is synthetic and
+# this repo has to be clonable in one step — see data/README.md.
+# Uncomment the next line for any project with real data:
+# data/
+*.xlsx
+*.dta
+*.sav
+
+# --- Notebook noise --------------------------------------------------------
+.ipynb_checkpoints/
+
+# --- OS / editor -----------------------------------------------------------
+.DS_Store
+Thumbs.db
+.vscode/settings.json

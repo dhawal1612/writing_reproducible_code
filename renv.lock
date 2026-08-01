@@ -1,0 +1,54 @@
+{
+  "R": {
+    "Version": "4.6.1",
+    "Repositories": [
+      {
+        "Name": "CRAN",
+        "URL": "https://cloud.r-project.org"
+      }
+    ]
+  },
+  "Packages": {
+    "renv": {
+      "Package": "renv",
+      "Version": "1.0.3",
+      "Source": "Repository",
+      "Repository": "CRAN"
+    },
+    "dplyr": {
+      "Package": "dplyr",
+      "Version": "1.1.4",
+      "Source": "Repository",
+      "Repository": "CRAN",
+      "Requirements": ["R", "cli", "generics", "glue", "lifecycle", "magrittr", "methods", "pillar", "R6", "rlang", "tibble", "tidyselect", "utils", "vctrs"]
+    },
+    "readr": {
+      "Package": "readr",
+      "Version": "2.1.5",
+      "Source": "Repository",
+      "Repository": "CRAN",
+      "Requirements": ["R", "cli", "clipr", "crayon", "hms", "lifecycle", "methods", "R6", "rlang", "tibble", "tzdb", "utils", "vroom"]
+    },
+    "ggplot2": {
+      "Package": "ggplot2",
+      "Version": "3.4.4",
+      "Source": "Repository",
+      "Repository": "CRAN",
+      "Requirements": ["cli", "glue", "grDevices", "grid", "gtable", "isoband", "lifecycle", "MASS", "mgcv", "R", "rlang", "scales", "stats", "tibble", "vctrs", "withr"]
+    },
+    "rmarkdown": {
+      "Package": "rmarkdown",
+      "Version": "2.25",
+      "Source": "Repository",
+      "Repository": "CRAN",
+      "Requirements": ["bslib", "evaluate", "fontawesome", "htmltools", "jquerylib", "jsonlite", "knitr", "methods", "R", "stringr", "tinytex", "tools", "utils", "xfun", "yaml"]
+    },
+    "rprojroot": {
+      "Package": "rprojroot",
+      "Version": "2.0.4",
+      "Source": "Repository",
+      "Repository": "CRAN",
+      "Requirements": ["R"]
+    }
+  }
+}
