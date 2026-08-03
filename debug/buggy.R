@@ -15,9 +15,10 @@
 # Note what happens first: it reports North correctly, THEN dies on South. Code
 # that half-works is the most misleading kind.
 #
-# The room's instinct will be to add print()/cat() calls. Instead: the browser()
-# call below is already in place. Source the file, and when the console prompt
-# becomes Browse[1]>, type  names(site_means)  and look:
+# The room's instinct will be to add print()/cat() calls. Instead, click the gutter
+# next to the marked line in report_row() and hit Source (Cmd/Ctrl+Shift+S) — the
+# same gesture as VSCode. When the prompt becomes Browse[1]>, type
+# nchar(names(site_means)) and look:
 #
 #     [1] "  South" " South"  "North"
 #
@@ -51,10 +52,15 @@ mean_glucose_by_site <- function(df) {
 }
 
 report_row <- function(site_means, site) {
-  # <<< THE BREAKPOINT. Source the file and inspect `site_means` here. >>>
-  # In the Browse[1]> prompt, try:  names(site_means)
-  browser()
-
+  #  <<< SET THE BREAKPOINT ON THE NEXT LINE >>>
+  # Click the gutter left of the line number (or Shift+F9), then click Source
+  # (Cmd/Ctrl+Shift+S). At the Browse[1]> prompt, try: nchar(names(site_means))
+  #
+  # Fallback: if a breakpoint refuses to activate — a grey hollow circle instead of
+  # a solid red one means it is pending because the file has not been sourced —
+  # uncomment the browser() below instead. It always works, and it is the right
+  # tool for top-level script lines, where gutter breakpoints are unreliable.
+  # browser()
   mean_value <- site_means[[site]]
 
   # This is where it errors — one line after the actual mistake, which is
@@ -79,10 +85,18 @@ main()
 # ---------------------------------------------------------------------------
 # Facilitator notes
 #
+# * PRINTING site_means HIDES THE BUG. R pads names to equal width, so all three
+#   look identically spaced and you simply cannot see the leading whitespace:
+#       South   South   North
+#        6.60    7.43    6.20
+#   Use names() (quotes make it visible) or nchar() (7 6 5 — numeric proof). This
+#   is the R-specific reason the reveal has to be explicit; Python's dict repr
+#   shows the quotes for free.
 # * `site_means[["South"]]` on a named vector whose name is " South" throws
 #   "subscript out of bounds" rather than returning NULL — so in R the error can
 #   land ON the lookup line rather than after it. Either way the Environment pane
 #   shows you the whitespace instantly, which is the point.
+# * The breakpoint stops TWICE — once per entry in TARGET_SITES. `c` continues.
 # * To demo the fix: change mean_glucose_by_site() to pipe through tidy_labs()
 #   first, then re-source. Two sites, no error.
 # * Type  Q  to leave the browser. Tell the room that, or you will be stuck in

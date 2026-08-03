@@ -208,7 +208,7 @@ clinical environment that second one is a data-handling problem, not a tidiness 
 | `notebooks/01_explore.ipynb` | Python analysis. **Contains the hidden-state trap.** |
 | `analysis/01_explore.Rmd` | R analysis. Contains the same trap. |
 | `debug/buggy.py` | Staged for the debugger segment. Fails with a `TypeError` one line after the real mistake. |
-| `debug/buggy.R` | The R twin, with `browser()` already in place. |
+| `debug/buggy.R` | The R twin. Set a breakpoint on the marked line and hit Source; `browser()` is commented out as a fallback. |
 | `requirements.txt` / `renv.lock` | The two recipes. This is the "environment" leg of the stool. |
 | `.gitignore` | A real starter list covering both toolchains — including the files that can leak patient data invisibly. |
 | `reset-demo.sh` | Puts the hidden-state trap back after you've solved it, so you can try again. |
@@ -263,8 +263,9 @@ source("debug/buggy.R")
 
 Both crash. Both crash *one line after the actual mistake*, which is exactly why adding
 print statements sends you hunting in the wrong place. Set a breakpoint (Python) or use
-the `browser()` that's already there (R), look at the variable, and the cause is obvious
-in about two seconds.
+a breakpoint plus Source (R), look at the variable, and the cause is obvious in about
+two seconds. In R you must type `nchar(names(site_means))` — printing the vector pads the
+names and hides the whitespace entirely.
 
 The bug is a realistic one: a group key with leading whitespace, because someone skipped
 the cleaning step.
