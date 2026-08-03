@@ -6,7 +6,11 @@
 #
 # Run it and you get:
 #
-#     Error in mean_value + 0.1 : non-numeric argument to binary operator
+#     [1] "North: 6.30 mmol/L (assay-adjusted)"
+#     Error in site_means[[site]] : subscript out of bounds
+#
+# (Python's twin raises one line later, on `mean_value + 0.1`, because .get()
+# returns None rather than erroring. Same bug, slightly different landing spot.)
 #
 # Note what happens first: it reports North correctly, THEN dies on South. Code
 # that half-works is the most misleading kind.

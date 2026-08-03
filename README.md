@@ -68,82 +68,96 @@ compile-and-fail into a one-line "no wheel for this" answer.
 ## Setup — R
 
 Open `demo-repo.Rproj` **first** — working inside an RStudio Project is what makes the
-relative paths in these scripts behave. Then:
+relative paths in these scripts behave. The project ships already activated, so opening it
+switches R to a private per-project library automatically.
 
 ```r
 install.packages("renv")   # one-time, if you don't have it
-renv::init()               # activates the project, finds what the code needs, installs it
+renv::restore()            # installs the exact versions in renv.lock
 ```
 
 Then open `analysis/01_explore.Rmd`.
 
-**Use `renv::init()`, not `renv::restore()`.** Both are in the session slides and both are
-correct in general — but for *this* repo `init()` is the one that works. Why is explained
-below.
+**Tested on R 4.6.1 (arm64 macOS).** Check yours with `R.version.string`.
 
-### The two prompts you'll see, and what to answer
+`renv.lock` is a **generated** lockfile — 49 packages, every transitive dependency pinned.
+That is the R equivalent of `pip freeze`, and it is what makes `renv::restore()` reliable.
 
-**1. The renv welcome message** — a wall of text explaining that renv will create a `renv/`
-folder, a `.Rprofile`, and a package cache under `~/Library/Caches/`, ending in:
+### See the sandbox, don't just trust it
 
-```
-Do you want to proceed? [y/N]:
-```
-
-Answer **`y`**. This is renv introducing itself on first use, once per machine. Nothing is
-installed yet at this point.
-
-**2. If you ran `renv::restore()`** you'll get this instead:
-
-```
-It looks like you've called renv::restore() in a project that hasn't been activated yet.
-How would you like to proceed?
-
-1: Activate the project and use the project library.
-2: Do not activate the project and use the current library paths.
-3: Cancel and resolve the situation another way.
-```
-
-Answer **`1`**.
-
-- **1 — Activate** is what you want. "Activated" means the project has an `renv/activate.R`
-  and a `.Rprofile` that switch R to a private, per-project library whenever you open the
-  project. This repo ships `renv.lock` but *not* that scaffolding, which is exactly why
-  renv is asking. Option 1 creates it.
-- **2 — Don't activate** installs into your global library instead. It will work, but it
-  defeats the entire point of segment 3: no sandbox, so this project's packages and every
-  other project's packages go back to fighting each other.
-- **3 — Cancel** changes nothing.
-
-### ⚠️ Why `init()` rather than `restore()` here
-
-`renv.lock` in this repo is a **hand-written teaching artifact** — it exists so you can open
-it and see the format (a pinned R version, a pinned version per package). It lists six
-packages, but **not their dependencies**: `dplyr` alone needs `cli`, `glue`, `rlang`,
-`vctrs`, `tibble` and about eight more, none of which are recorded.
-
-`renv::restore()` installs *what the lockfile says* — so restoring from this minimal
-lockfile can leave you with a `dplyr` that fails to load, complaining about a missing
-dependency. That is not a bug in renv; it is a lockfile that was written by hand instead of
-generated.
-
-`renv::init()` avoids the problem by **scanning the code** for `library()` and `::` calls,
-resolving the full dependency tree itself, and installing that. Afterwards:
+Python users get an obvious signal: their shell prompt changes when the venv activates. In R
+the activation is automatic and therefore invisible, which is more convenient and less
+educational. So look at it directly:
 
 ```r
-renv::snapshot()    # regenerate renv.lock properly, from what is actually installed
+.libPaths()
 ```
 
-Now `renv.lock` is a real lockfile with every transitive dependency pinned — which is what
-`pip freeze` does on the Python side, and what you'd have in a real project.
+Inside this project, the first path is the project's own library:
 
-> **This is a genuine lesson, not just a wart.** A lockfile you *wrote* is documentation. A
-> lockfile you *generated* is reproducible. Only one of them survives contact with a
-> labmate's laptop.
+```
+.../demo-repo/renv/library/macos/R-4.6/aarch64-apple-darwin23
+```
+
+Run the same command in a plain R session outside the project and you'll get your global
+library instead. **That difference is the sandbox.** It is worth doing once, because
+"isolated per-project packages" stays abstract until you have seen the two paths side by
+side.
+
+### Prompts you may see, and what to answer
+
+**The renv welcome message**, on first use of renv on a machine — a wall of text about
+creating a `renv/` folder and a cache under `~/Library/Caches/`, ending in
+`Do you want to proceed? [y/N]:`. Answer **`y`**. Nothing is installed yet at that point.
+
+**"…project that hasn't been activated yet"** — three options, choose **`1: Activate the
+project and use the project library.`** You should not normally see this, because the repo
+commits its activation files; you would only hit it if `.Rprofile` or `renv/activate.R`
+were missing. Option 2 works but installs into your *global* library, which defeats the
+entire point of segment 3 — no sandbox, so every project's packages go back to fighting
+each other.
+
+**"The following package(s) were not installed successfully… Would you like to try
+installing the latest available versions? [y/N]"** — answer **`y`**. See below for why this
+can happen and why it is not your fault.
+
+### If a package fails to build from source
+
+If `renv::restore()` reports a compile failure with errors like
+
+```
+error: use of undeclared identifier 'Rf_allocSExp'
+error: use of undeclared identifier 'SET_TRUELENGTH'
+```
+
+that is a **version mismatch, not a broken laptop**. Those are R internals that recent R
+releases stopped exposing. A package version published before your R version can call them
+in its C++ and simply will not compile against a newer R.
+
+Say **`y`** to renv's "try the latest available versions?" offer. Newer versions have the
+fix and usually arrive as prebuilt binaries. Then:
+
+```r
+renv::status()      # see what is out of sync
+renv::snapshot()    # write the working versions into renv.lock
+```
+
+> **One gotcha worth knowing:** renv installs as a transaction, so if any package in the set
+> fails, the whole batch can be rolled back — including packages whose own lines said
+> `✔ installed`. If something is missing afterwards, install it explicitly rather than
+> trusting the log:
+> ```r
+> renv::install(c("rmarkdown", "rprojroot"))
+> renv::snapshot()
+> ```
+
+This is the same failure the Python side has, for the same reason. See
+[If the install fails](#if-the-install-fails) above — `pandas==2.1.4` would not build on
+Python 3.14 either. **A pin too loose gives your labmate different results; a pin too tight
+stops them installing at all.** Neither is fixed by refusing to pin — it is fixed by pinning
+*and* recording which runtime you tested.
 
 ### What renv adds to your project, and what to commit
-
-After activating you'll see new files. This trips people up, so:
 
 | Path | Commit it? | What it is |
 |---|---|---|
@@ -151,11 +165,11 @@ After activating you'll see new files. This trips people up, so:
 | `.Rprofile` | **yes** | One line that activates renv when the project opens. |
 | `renv/activate.R` | **yes** | The bootstrap script `.Rprofile` calls. |
 | `renv/settings.json` | **yes** | Project renv settings. |
-| `renv/library/` | **no** | The sandbox itself — big, machine-specific, rebuildable. |
+| `renv/.gitignore` | **yes** | renv's own ignore rules. |
+| `renv/library/` | **no** | The sandbox itself — 3.4 MB here, machine-specific, rebuildable. |
 
-The repo's `.gitignore` already excludes `renv/library/`, and renv adds its own ignore rules
-too (it writes an `renv/.gitignore` and may append to the root one). If `git status` looks
-busy after activating, that is expected — check the table above before committing.
+`git status` looks busy the first time you activate. That is expected: four small text files
+to commit, and a library that is already ignored.
 
 **Commit the recipe, never the sandbox.** Same rule as `.venv/` and `requirements.txt`.
 
@@ -167,8 +181,8 @@ Perfectly reasonable if you just want to run the exercise:
 install.packages(c("dplyr", "readr", "rmarkdown", "rprojroot"))
 ```
 
-Everything in this repo works with plain global packages. You lose the isolation, which is
-the thing segment 3 is about — but nothing here *requires* renv.
+Everything here works with plain global packages. You lose the isolation, which is the thing
+segment 3 is about — but nothing *requires* renv.
 
 ### Change these three RStudio settings before you start
 
@@ -197,6 +211,12 @@ clinical environment that second one is a data-handling problem, not a tidiness 
 | `debug/buggy.R` | The R twin, with `browser()` already in place. |
 | `requirements.txt` / `renv.lock` | The two recipes. This is the "environment" leg of the stool. |
 | `.gitignore` | A real starter list covering both toolchains — including the files that can leak patient data invisibly. |
+| `reset-demo.sh` | Puts the hidden-state trap back after you've solved it, so you can try again. |
+| `demo-repo.Rproj` | The RStudio Project. Open **this**, not the individual files. |
+| `.Rprofile` and `renv/` | **Plumbing — you never need to read or edit these.** One line in `.Rprofile` switches R to this project's private package library the moment you open the project. `renv/activate.R` is the 1400-line script that does it. Committed because they are what make `renv::restore()` just work for you instead of erroring. |
+
+> **Two files here are worth understanding rather than skipping:** `requirements.txt` and
+> `renv.lock`. Everything else in this table is either the analysis itself or plumbing.
 
 ---
 

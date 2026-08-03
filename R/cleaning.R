@@ -21,10 +21,20 @@ PLAUSIBLE_HBA1C_PERCENT  <- c(3.0, 15.0)
 #' Deliberately does no cleaning — keeping "read it" and "fix it" separate means
 #' you can always look at what actually arrived.
 load_labs <- function(path = "data/labs.csv") {
-  # col_types set explicitly: let readr guess and the whitespace-only hba1c
-  # column silently becomes character on some machines and numeric on others.
+  # trim_ws = FALSE is deliberate, and it is the one place this file differs in
+  # spirit from src/cleaning.py.
+  #
+  # readr trims leading/trailing whitespace from character columns BY DEFAULT.
+  # pandas does not. That default is usually a kindness, but here it would quietly
+  # clean the `site` column on the way in — so "raw" would not actually be raw, the
+  # trimws() in tidy_labs() would be a no-op, and the bug staged in debug/buggy.R
+  # would not reproduce for R users at all.
+  #
+  # Worth knowing generally: two languages reading the same CSV do not necessarily
+  # give you the same data frame. Defaults are decisions someone else made for you.
   read_csv(
     path,
+    trim_ws = FALSE,
     col_types = cols(
       subject_id     = col_character(),
       visit_date     = col_date(format = "%Y-%m-%d"),

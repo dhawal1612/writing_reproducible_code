@@ -9,9 +9,14 @@ venv/
 renv/library/
 renv/staging/
 renv/python/
+renv/local/
+renv/cellar/
+renv/sandbox/
+renv/lock/
 __pycache__/
 *.pyc
-.Rproj.user/
+# NOTE: renv.lock, .Rprofile, renv/activate.R and renv/settings.json are the
+# RECIPE — commit them. Only the directories above are the sandbox.
 
 # --- Files that can contain patient data without looking like it -----------
 # .RData is a binary blob of whatever was in your R session. If patient data was
@@ -24,6 +29,15 @@ __pycache__/
 *.pickle
 *.parquet
 *.feather
+
+# --- R / RStudio metadata --------------------------------------------------
+# Per-user editor state and cached credentials. None of this describes the
+# analysis, all of it differs between machines, and .httr-oauth is a live token.
+.Rproj.user/
+.Ruserdata/
+.httr-oauth
+*.Rcheck/
+*.Rproj.bak
 
 # --- Secrets ---------------------------------------------------------------
 .env
