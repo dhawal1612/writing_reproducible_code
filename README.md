@@ -67,17 +67,108 @@ compile-and-fail into a one-line "no wheel for this" answer.
 
 ## Setup — R
 
+Open `demo-repo.Rproj` **first** — working inside an RStudio Project is what makes the
+relative paths in these scripts behave. Then:
+
 ```r
-install.packages("renv")           # one-time, if you don't have it
-renv::restore()                    # reads renv.lock, installs those versions
+install.packages("renv")   # one-time, if you don't have it
+renv::init()               # activates the project, finds what the code needs, installs it
 ```
 
-Open `demo-repo.Rproj` **first** — working inside an RStudio Project is what makes the
-relative paths in these scripts behave. Then open `analysis/01_explore.Rmd`.
+Then open `analysis/01_explore.Rmd`.
 
-> `renv.lock` here is a small hand-written starter so you can see the format. Run
-> `renv::snapshot()` once you've installed things and it will regenerate properly
-> from your actual library.
+**Use `renv::init()`, not `renv::restore()`.** Both are in the session slides and both are
+correct in general — but for *this* repo `init()` is the one that works. Why is explained
+below.
+
+### The two prompts you'll see, and what to answer
+
+**1. The renv welcome message** — a wall of text explaining that renv will create a `renv/`
+folder, a `.Rprofile`, and a package cache under `~/Library/Caches/`, ending in:
+
+```
+Do you want to proceed? [y/N]:
+```
+
+Answer **`y`**. This is renv introducing itself on first use, once per machine. Nothing is
+installed yet at this point.
+
+**2. If you ran `renv::restore()`** you'll get this instead:
+
+```
+It looks like you've called renv::restore() in a project that hasn't been activated yet.
+How would you like to proceed?
+
+1: Activate the project and use the project library.
+2: Do not activate the project and use the current library paths.
+3: Cancel and resolve the situation another way.
+```
+
+Answer **`1`**.
+
+- **1 — Activate** is what you want. "Activated" means the project has an `renv/activate.R`
+  and a `.Rprofile` that switch R to a private, per-project library whenever you open the
+  project. This repo ships `renv.lock` but *not* that scaffolding, which is exactly why
+  renv is asking. Option 1 creates it.
+- **2 — Don't activate** installs into your global library instead. It will work, but it
+  defeats the entire point of segment 3: no sandbox, so this project's packages and every
+  other project's packages go back to fighting each other.
+- **3 — Cancel** changes nothing.
+
+### ⚠️ Why `init()` rather than `restore()` here
+
+`renv.lock` in this repo is a **hand-written teaching artifact** — it exists so you can open
+it and see the format (a pinned R version, a pinned version per package). It lists six
+packages, but **not their dependencies**: `dplyr` alone needs `cli`, `glue`, `rlang`,
+`vctrs`, `tibble` and about eight more, none of which are recorded.
+
+`renv::restore()` installs *what the lockfile says* — so restoring from this minimal
+lockfile can leave you with a `dplyr` that fails to load, complaining about a missing
+dependency. That is not a bug in renv; it is a lockfile that was written by hand instead of
+generated.
+
+`renv::init()` avoids the problem by **scanning the code** for `library()` and `::` calls,
+resolving the full dependency tree itself, and installing that. Afterwards:
+
+```r
+renv::snapshot()    # regenerate renv.lock properly, from what is actually installed
+```
+
+Now `renv.lock` is a real lockfile with every transitive dependency pinned — which is what
+`pip freeze` does on the Python side, and what you'd have in a real project.
+
+> **This is a genuine lesson, not just a wart.** A lockfile you *wrote* is documentation. A
+> lockfile you *generated* is reproducible. Only one of them survives contact with a
+> labmate's laptop.
+
+### What renv adds to your project, and what to commit
+
+After activating you'll see new files. This trips people up, so:
+
+| Path | Commit it? | What it is |
+|---|---|---|
+| `renv.lock` | **yes** | The recipe. The whole point. |
+| `.Rprofile` | **yes** | One line that activates renv when the project opens. |
+| `renv/activate.R` | **yes** | The bootstrap script `.Rprofile` calls. |
+| `renv/settings.json` | **yes** | Project renv settings. |
+| `renv/library/` | **no** | The sandbox itself — big, machine-specific, rebuildable. |
+
+The repo's `.gitignore` already excludes `renv/library/`, and renv adds its own ignore rules
+too (it writes an `renv/.gitignore` and may append to the root one). If `git status` looks
+busy after activating, that is expected — check the table above before committing.
+
+**Commit the recipe, never the sandbox.** Same rule as `.venv/` and `requirements.txt`.
+
+### Don't want renv at all?
+
+Perfectly reasonable if you just want to run the exercise:
+
+```r
+install.packages(c("dplyr", "readr", "rmarkdown", "rprojroot"))
+```
+
+Everything in this repo works with plain global packages. You lose the isolation, which is
+the thing segment 3 is about — but nothing here *requires* renv.
 
 ### Change these three RStudio settings before you start
 
